@@ -65,7 +65,7 @@ function backup() {
 function mv_pack() {
   cd $UPLOAD_DIR/$DATE/$1
   a_dirs=(`ls`)
-  backup $2 ${a_dir[@]}
+  backup $2 ${a_dirs[@]}
   for a_dir in ${a_dirs[@]}; do
     cd $UPLOAD_DIR/$DATE/$1/$a_dir
     if [ ! -f "dist.zip" ]
