@@ -54,8 +54,8 @@ function backup() {
       mv dist "$BAK_DIR"
       logger INFO "backup $dir successfully"
     else
-      logger warn "app dir $app_dir is not exist,continue"
-      continue
+      logger error "app dir $app_dir is not exist,exit"
+      exit 1
     fi
   done
   successMsg "backup have done"
