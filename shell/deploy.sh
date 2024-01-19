@@ -6,7 +6,8 @@ readonly NGX_BASE_DIR="/usr/local/openresty/nginx"
 DATE=$(date +%Y%m%d%H%M)
 SRC_DIR=$UPLOAD_DIR/$DATE
 
-APP_DIR="$NGX_BASE_DIR/html/urban-design/test"
+SHEKOU_APP_DIR="$NGX_BASE_DIR/html/urban-design/test"
+NANTONG_APP_DIR="$NGX_BASE_DIR/html/urban_planning_NT"
 
 # message output
 function successMsg() {
@@ -43,15 +44,39 @@ function backup() {
   local BAK_DIR="dist-backup"
   for dir in web client mobile
   do
-    cd $APP_DIR/$dir
-    if [ -d "$BAK_DIR" ]
-    then
-      rm -fr "$BAK_DIR"
+    app_dir="$1/$dir"
+    if [ -d "$app_dir" ]; then
+      cd $app_dir
+      if [ -d "$BAK_DIR" ]
+      then
+        rm -fr "$BAK_DIR"
+      fi
+      mv dist "$BAK_DIR"
+      logger INFO "backup $dir successfully"
+    else
+      logger warn "app dir $app_dir is not exist,continue"
+      continue
     fi
-    mv dist "$BAK_DIR"
-    logger INFO "backup $dir successfully"
   done
   successMsg "backup have done"
+}
+
+# mv dist package
+function mv_pack() {
+  cd $UPLOAD_DIR/$DATE/$1
+  a_dirs=(`ls`)
+  for a_dir in ${a_dirs[@]}; do
+    cd $UPLOAD_DIR/$DATE/$1/$a_dir
+    if [ ! -f "dist.zip" ]
+    then
+      logger error "Error,dist zip file is not exist,exit"
+      exit 2
+    fi
+    unzip dist.zip >/dev/null
+    mv dist $2/$a_dir/
+    logger INFO "deploy $a_dir have done"
+    sleep 3
+  done
 }
 
 # deploy
@@ -60,19 +85,23 @@ function deploy() {
   if [ -d "$UPLOAD_DIR/$DATE" ]
   then
     cd "$UPLOAD_DIR/$DATE"
-    SUB_DIRS=(`ls`)
-    for sub_dir in ${SUB_DIRS[@]}
+    project_names=(`ls`)
+    for name in ${project_names[@]}
     do
-      cd $UPLOAD_DIR/$DATE/$sub_dir
-      if [ ! -f "dist.zip" ]
-      then
-        logger error "Error,dist zip file is not exist,exit"
-        exit 2
-      fi
-      unzip dist.zip >/dev/null
-      mv dist $APP_DIR/$sub_dir/
-      logger INFO "deploy $sub_dir have done"
-      sleep 3
+      logger info "----deploy project ${name}----"
+      case $name in
+        shekou)
+          backup $SHEKOU_APP_DIR
+          mv_pack $name $SHEKOU_APP_DIR
+          ;;
+        nantong)
+          backup $NANTONG_APP_DIR
+          mv_pack $name $NANTONG_APP_DIR
+          ;;
+        *)
+          logger error "Error, project name incorrect, exit"
+          exit 3
+      esac
     done
   else
     logger error "deploy dir is not exist, exit"
@@ -85,10 +114,8 @@ function deploy() {
 function main() {
   action=$1
   if [ "$action" == "" ]; then
-    backup
     deploy
   elif [ "$action" == "install" ]; then
-    backup
     deploy
   fi
 }
