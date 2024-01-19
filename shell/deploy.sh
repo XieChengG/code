@@ -42,7 +42,7 @@ function logger() {
 # backup
 function backup() {
   local BAK_DIR="dist-backup"
-  for dir in web client mobile
+  for dir in $2
   do
     app_dir="$1/$dir"
     if [ -d "$app_dir" ]; then
@@ -65,6 +65,7 @@ function backup() {
 function mv_pack() {
   cd $UPLOAD_DIR/$DATE/$1
   a_dirs=(`ls`)
+  backup $2 ${a_dir[@]}
   for a_dir in ${a_dirs[@]}; do
     cd $UPLOAD_DIR/$DATE/$1/$a_dir
     if [ ! -f "dist.zip" ]
@@ -91,11 +92,9 @@ function deploy() {
       logger info "----deploy project ${name}----"
       case $name in
         shekou)
-          backup $SHEKOU_APP_DIR
           mv_pack $name $SHEKOU_APP_DIR
           ;;
         nantong)
-          backup $NANTONG_APP_DIR
           mv_pack $name $NANTONG_APP_DIR
           ;;
         *)
