@@ -41,7 +41,7 @@ function logger() {
 
 # backup
 function backup() {
-  local BAK_DIR="dist-backup"
+  BAK_DIR="dist-backup"
   for dir in $2
   do
     app_dir="$1/$dir"
@@ -109,6 +109,32 @@ function deploy() {
   logger INFO "deploy all app successfully..."
 }
 
+# rollback frontend app
+function rollback() {
+  local p_name=$1
+  local a_name=$2
+  if [ "$p_name" == "nantong" ]; then
+    a_dir=$NANTONG_APP_DIR/$a_name
+  elif [ "$p_name" == "shekou" ]; then
+    a_dir=$SHEKOU_APP_DIR/$a_name
+  fi
+
+  if [ ! -d "$a_dir" ]; then
+    logger error "error, app dir $a_dir is not exist, exit"
+    exit 1
+  fi
+
+  cd $a_dir
+  if [ -d "$BAK_DIR" ]; then
+    mv dist dist-redo
+    mv $BAK_DIR dist
+    logger info "rollback $p_name $a_name successfully"
+  else
+    logger error "error, backup dir is not exist, exit"
+    exit 1
+  fi
+}
+
 # main function
 function main() {
   action=$1
@@ -116,6 +142,8 @@ function main() {
     deploy
   elif [ "$action" == "install" ]; then
     deploy
+  elif [ "$action" == "rollback" ]; then
+    rollback $2 $3
   fi
 }
 
