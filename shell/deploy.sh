@@ -135,11 +135,21 @@ function rollback() {
   fi
 }
 
+# print help info
+function help() {
+  echo "The script of deploy frontend application"
+  echo "Usage: $0 [option]"
+  echo "option:"
+  echo "                                        print this help info"
+  echo "       install                          deploy frontend application"
+  echo "       rollback [projectname] [appname] rollback frontend application to previous version, such as: rollback nantong web"
+}
+
 # main function
 function main() {
   action=$1
   if [ "$action" == "" ]; then
-    deploy
+    help
   elif [ "$action" == "install" ]; then
     deploy
   elif [ "$action" == "rollback" ]; then
