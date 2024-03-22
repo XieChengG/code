@@ -33,6 +33,7 @@ function change_file() {
   mkdir $BAK_DIR
   mv ./* ${BAK_DIR}/ 2>/dev/null
   mv ${BAK_DIR}/$PKG_NAME ./
+  mv ${BAK_DIR}/dist-backup-* ./
   unzip $PKG_NAME >/dev/null
   rm -f $PKG_NAME
   logger info "deploy $1 successfully"
