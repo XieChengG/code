@@ -73,3 +73,6 @@ class ZookeeperServer(object):
         except (ValueError, TypeError):
             pass
         return key, value
+
+    def git_pid(self):
+        pass
