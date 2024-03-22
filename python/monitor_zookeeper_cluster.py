@@ -4,10 +4,6 @@ import subprocess
 from StringIO import StringIO
 import os
 
-zabbix_sender = "/app/zabbix/bin/zabbix-sender"
-zabbix_conf = "/app/zabbix/conf/zabbix.conf"
-send_to_zabbix = 1
-
 
 class ZookeeperServer(object):
     def __init__(self, host='localhost', port='2181', timeout=1):
