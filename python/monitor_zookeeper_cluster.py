@@ -74,5 +74,54 @@ class ZookeeperServer(object):
             pass
         return key, value
 
-    def git_pid(self):
-        pass
+    def get_pid(self):
+        arg_dict = {}
+        pid_arg = 'echo mntr | nc 127.0.0.1 2181'
+        pid_out = subprocess.Popen(pid_arg, shell=True, stdout=subprocess.PIPE)
+        line = pid_out.stdout.readline().strip('\n')
+        while line:
+            al = line.split('\t')
+            if al[0] == 'zk_version':
+                value = al[1][:al[1].find('-')]
+                arg_dict[al[0]] = value
+            else:
+                arg_dict[al[0]] = al[1]
+            line = pid_out.stdout.readline().strip('\n')
+
+        pid_arg = 'echo srvr | nc 127.0.0.1 2181'
+        pid_out = subprocess.Popen(pid_arg, shell=True, stdout=subprocess.PIPE)
+        line = pid_out.stdout.readline().strip('\n')
+        while line:
+            al = line.split(':')
+            arg_dict[al[0].strip()] = al[1].strip()
+            line = pid_out.stdout.readline().strip('\n')
+
+        pid_arg = 'echo ruok | nc 127.0.0.1 2181'
+        pid_out = subprocess.Popen(pid_arg, shell=True, stdout=subprocess.PIPE)
+        line = pid_out.stdout.readline().strip('\n')
+        arg_dict['ruok'] = line
+
+        pid_arg = "ps -ef |grep java |grep zookeeper |grep -v grep |awk '{print $2}'"
+        pid_out = subprocess.Popen(pid_arg, shell=True, stdout=subprocess.PIPE)
+        line = pid_out.stdout.readline().strip('\n')
+        arg_dict['all'] = line
+        arg_dict['alive'] = line
+        return arg_dict
+
+
+def usage():
+    print("\nUsage: ", sys.argv[0], " alive|all")
+    print("Modes: \n\talive: Return pid of running zookeeper\n\tall: Send zookeeper stats as well")
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        mode = sys.argv[1]
+    else:
+        usage()
+
+    zk = ZookeeperServer()
+    pid = zk.get_pid()
+    if pid and mode in pid.keys():
+        print(pid.get(mode))
