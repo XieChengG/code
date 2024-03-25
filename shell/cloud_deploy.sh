@@ -46,7 +46,7 @@ function monitor_pkg() {
   for dir in ${sub_dirs[@]}; do
     dir_acc_timestamp=`stat -c %X $dir`
     timestamp_diff_val=$((CURRENT_TIMESTAMP-dir_acc_timestamp))
-    if [ $timestamp_diff_val -lt 600 ]; then
+    if [ $timestamp_diff_val -lt 1200 ]; then
       ls ${dir}/$PKG_NAME >/dev/null 2>&1
       ret_val=$?
       if [ $ret_val -eq 0 ]; then
