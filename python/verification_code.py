@@ -2,6 +2,7 @@
 
 import random
 
+
 def random_code():
     '''生成随机验证码'''
     while True:
@@ -17,4 +18,6 @@ def random_code():
             exit(0)
         else:
             continue
+
+
 random_code()
