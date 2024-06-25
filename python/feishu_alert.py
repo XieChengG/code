@@ -11,7 +11,7 @@ import time
 
 def send_msg(url, reminders, msg):
     timestamp = int(time.time())
-    secret = "CCA4wAGXa9MJsPCkvartlc"
+    secret = ""
     sign = gen_sign(timestamp, secret)
     headers = {'Content-Type': 'application/json;charset=UTF-8'}
     data = {
