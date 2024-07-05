@@ -40,31 +40,39 @@ function send_alert_msg() {
 # 获取最近5次的平均值并和阈值比较
 function get_avg_value() {
   metric_name=$1
-  declare -a value_array=()  # 定义空数组
-  for i in {0..4}; do  # 获取近5秒的监控值
-    if [ "$metric_name" == "cpu" ]; then
-      value_array[i]=$(get_cpu)
-    elif [ "$metric_name" == "memory" ]; then
-      value_array[i]=$(get_mem)
-    fi
-    sleep 5
-  done
-
-  sum=0
-  for ((i=0;i<${#value_array[@]};i++))
-  do
-    sum=$(echo "$sum+${value_array[i]}" | bc)
-  done
-  num=${#value_array[@]}
-  avg_5_value=$(echo "$sum/$num" | bc)
-
-  local value=90.0
-  local result
-  result=$(echo "$avg_5_value > $value" | bc)
-  if [ $result -eq 1 ]
+  PID=$(get_pid)
+  if [ -n "$PID" ]
   then
-    send_alert_msg "ip address [118.89.86.95] process [$PID] $metric_name is too high,average value is $avg_5_value"
-    return 0
+    PID_LEN=${#PID}
+    declare -a value_array=()  # 定义空数组
+    for i in {0..4}; do  # 获取近5秒的监控值
+      if [ "$metric_name" == "cpu" ]; then
+        value_array[i]=$(get_cpu)
+      elif [ "$metric_name" == "memory" ]; then
+        value_array[i]=$(get_mem)
+      fi
+      sleep 5
+    done
+
+    sum=0
+    for ((i=0;i<${#value_array[@]};i++))
+    do
+      sum=$(echo "$sum+${value_array[i]}" | bc)
+    done
+    num=${#value_array[@]}
+    avg_5_value=$(echo "$sum/$num" | bc)
+
+    local value=90.0
+    local result
+    result=$(echo "$avg_5_value > $value" | bc)
+    if [ $result -eq 1 ]
+    then
+      send_alert_msg "ip address [118.89.86.95] process [$PID] $metric_name is too high,average value is $avg_5_value"
+      return 0
+    fi
+  else
+    echo "The $P_NAME process is not exists, exit"
+    exit 1
   fi
 }
 
@@ -101,26 +109,15 @@ function get_process_num() {
 function main() {
   P_NAME=$1
   metric=$2
-  PID=$(get_pid)
-  if [ -n "$PID" ]
-  then
-    PID_LEN=${#PID}
-    case $metric in
-      cpu)
-        get_avg_value cpu
-      ;;
-      memory)
-        get_avg_value memory
-      ;;
-      process)
-        get_process_num "$P_NAME"
-      ;;
-      *)
-        echo "Usage: $0 process_name {cpu|memory|process}"
-    esac
+
+  if [ "$metric" == "cpu" ]; then
+    get_avg_value cpu
+  elif [ "$metric" == "memory" ]; then
+    get_avg_value memory
+  elif [ "$metric" == "process" ]; then
+    get_process_num "$P_NAME"
   else
-    echo "The $P_NAME process is not exist, exit..."
-    exit 1
+    echo "Usage: $0 process_name {cpu|memory|process}"
   fi
 }
 main "$@"
