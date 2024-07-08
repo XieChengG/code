@@ -6,28 +6,60 @@ export TERM=xterm
 
 # 获取进程CPU使用率
 function get_cpu() {
-  if [ "$PID_LEN" -lt 5 ]; then
-    cpu_usage=$(top -bn 1 -p "$PID" |grep "$PID" |awk -F "[ ]+" '{print $10}')
-  else
-    cpu_usage=$(top -bn 1 -p "$PID" |grep "$PID" |awk -F "[ ]+" '{print $9}')
-  fi
-  echo $cpu_usage
+  declare -a cpu_value_arr=()
+  for((i=0;i<${#pids[@]};i++))
+  do
+    local pid
+    pid=${pids[i]}
+    local pid_len
+    pid_len=${#pid}
+    if [ "$pid_len" -lt 5 ]; then
+      cpu_usage=$(top -bn 1 -p "$pid" |grep "$pid" |awk -F "[ ]+" '{print $10}')
+    else
+      cpu_usage=$(top -bn 1 -p "$pid" |grep "$pid" |awk -F "[ ]+" '{print $9}')
+    fi
+    cpu_value_arr[i]=$cpu_usage
+  done
+
+  local cpu_value_sum=0
+  for((i=0;i<${#cpu_value_arr[@]};i++))
+  do
+    cpu_value_sum=$(echo "$cpu_value_sum+${cpu_value_arr[i]}" | bc)
+  done
+
+  echo $cpu_value_sum
 }
 
 # 获取进程内存使用率
 function get_mem() {
-  if [ "$PID_LEN" -lt 5 ]; then
-    mem_usage=$(top -bn 1 -p "$PID" |grep "$PID" |awk -F "[ ]+" '{print $11}')
-  else
-    mem_usage=$(top -bn 1 -p "$PID" |grep "$PID" |awk -F "[ ]+" '{print $10}')
-  fi
-  echo $mem_usage
+  declare -a mem_value_arr=()
+  for((i=0;i<${#pids[@]};i++))
+  do
+    local pid
+    pid=${pids[i]}
+    local pid_len
+    pid_len=${#pid}
+    if [ "$pid_len" -lt 5 ]; then
+      mem_usage=$(top -bn 1 -p "$pid" |grep "$pid" |awk -F "[ ]+" '{print $11}')
+    else
+      mem_usage=$(top -bn 1 -p "$pid" |grep "$pid" |awk -F "[ ]+" '{print $10}')
+    fi
+    mem_value_arr[i]=$mem_usage
+  done
+
+  local mem_value_sum=0
+  for((i=0;i<${#mem_value_arr[@]};i++))
+  do
+    mem_value_sum=$(echo "$mem_value_sum+${mem_value_arr[i]}" | bc)
+  done
+
+  echo $mem_value_sum
 }
 
 # 获取主进程的pid号
 function get_pid() {
-  P_ID=$(ps -ef |grep "$P_NAME" |grep -v "grep" |awk '$3==1{print $2}' |head -1)
-  echo "$P_ID"
+  pids=($(ps -ef |grep "$P_NAME" |grep -v "grep" |grep -v "monitor" |awk '{print $2}'))
+  echo ${pids[@]}
 }
 
 # 发送飞书告警
@@ -40,10 +72,9 @@ function send_alert_msg() {
 # 获取最近5次的平均值并和阈值比较
 function get_avg_value() {
   metric_name=$1
-  PID=$(get_pid)
-  if [ -n "$PID" ]
+  pids=($(get_pid))
+  if [ "${#pids[@]}" -ne 0 ]
   then
-    PID_LEN=${#PID}
     declare -a value_array=()  # 定义空数组
     for i in {0..4}; do  # 获取近5秒的监控值
       if [ "$metric_name" == "cpu" ]; then
@@ -53,6 +84,7 @@ function get_avg_value() {
       fi
       sleep 5
     done
+    echo ${value_array[@]}
 
     sum=0
     for ((i=0;i<${#value_array[@]};i++))
@@ -67,7 +99,7 @@ function get_avg_value() {
     result=$(echo "$avg_5_value > $value" | bc)
     if [ $result -eq 1 ]
     then
-      send_alert_msg "ip address [118.89.86.95] process [$PID] $metric_name is too high,average value is $avg_5_value"
+      send_alert_msg "ip address [118.89.86.95] process [$P_NAME] $metric_name is too high,average value is $avg_5_value"
       return 0
     fi
   else
