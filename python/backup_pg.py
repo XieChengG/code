@@ -156,8 +156,9 @@ if __name__ == '__main__':
         backup_pgsql = BackupPgsql()
         log_obj = backup_pgsql.logger()
         backup_pgsql.backup_database(log_obj)  # 备份数据库
-        delete_files = DeleteFiles(backup_pgsql.backup_path)
-        if not delete_files.delete_files(log_obj):
+        delete_files = DeleteFiles(backup_pgsql.backup_path[:backup_pgsql.backup_path.rfind("/")])
+        res = delete_files.delete_files(log_obj)
+        if not res:
             log_obj.error("Delete files failed!")
     except BaseException as e:
         print(e)
