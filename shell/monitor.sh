@@ -137,6 +137,31 @@ function get_process_num() {
   fi
 }
 
+# web监测，检测站点是否能正常访问
+function web_check() {
+  local domain_name
+  domain_name="$1"
+  [ -z "$domain_name" ] && echo "请输入域名参数" && exit 1
+  declare -a code_arr=()
+  for i in {0..9}
+  do
+    resp_code=$(curl -sI 'http://'$domain_name'' |grep "HTTP" |awk '{print $2}')
+    if [ "$resp_code" != "200" -a "$resp_code" != "301" -a "$resp_code" != "302" -a "$resp_code" != "304" ]
+    then
+      code_arr[i]=$resp_code
+    fi
+    sleep 10
+  done
+
+  if [ ${#code_arr[@]} -gt 5 ]
+  then
+    send_alert_msg "$domain_name 网站不可访问，请及时关注"
+    return 1
+  else
+    return 0
+  fi
+}
+
 # 主函数
 function main() {
   P_NAME=$1
@@ -148,6 +173,8 @@ function main() {
     get_avg_value memory
   elif [ "$metric" == "process" ]; then
     get_process_num "$P_NAME"
+  elif [[ "$P_NAME" =~ ^([a-zA-Z0-9][-a-zA-Z0-9]{0,62}\.)+[a-zA-Z0-9]{2,}$ ]]; then
+    web_check "$P_NAME"
   else
     echo "Usage: $0 process_name {cpu|memory|process}"
   fi
