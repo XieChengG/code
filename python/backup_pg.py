@@ -139,6 +139,9 @@ class DeleteFiles(object):
                         if os.path.getctime(file_path) < self.before_timestamp:  # 如果是3天前的文件则删除
                             os.remove(file_path)
                             log_obj.info("Delete file {0}".format(file_path))
+                            if not os.listdir(os.path.dirname(file_path)):  # 文件删完了，最后删目录
+                                os.removedirs(os.path.dirname(file_path))
+                                log_obj.info("Delete directory {0}".format(os.path.dirname(file_path)))
                     elif os.path.isdir(file_path):
                         if not os.listdir(file_path):  # 如果是空目录
                             os.removedirs(file_path)
