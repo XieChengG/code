@@ -27,9 +27,10 @@ RUN set -eux; \
     rm *.tar.gz; \
     \
     yum install -y jenkins-${JENKINS_VERSION}-1.1.noarch.rpm; \
-    yum clean all
+    yum clean all; \
+    rm *.rpm
 
 VOLUME /var/log/jenkins /var/lib/jenkins
 
-EXPOSE 8085
-CMD ["/etc/init.d/jenkins", "start"]
+EXPOSE 8080
+CMD ["jenkins"]
