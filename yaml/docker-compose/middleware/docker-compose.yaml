@@ -1,0 +1,100 @@
+services:
+  mysql:
+    image: mysql:8.0.2
+    restart: always
+    command:
+      - --default-authentication-plugin=mysql_native_password
+    hostname: mysql
+    ports:
+      - "13306:3306"
+    volumes:
+      - /data/mysql:/var/lib/mysql
+      - ./conf/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: xzkjxzkj@123
+    container_name: mysql
+    networks:
+      - middleware
+
+  redis:
+    image: 61.145.163.124:8084/library/middleware/redis:v5
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /redis-data:/redis-data
+    hostname: redis
+    container_name: redis-middleware
+    networks:
+      - middleware
+    depends_on:
+      - mysql
+
+  rabbitmq:
+    image: 61.145.163.124:8084/library/middleware/rabbitmq:v1
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: root
+      RABBITMQ_DEFAULT_PASS: xzkjxzkj@123
+    volumes:
+      - /var/lib/rabbitmq:/var/lib/rabbitmq
+    networks:
+      - middleware
+
+  nacos:
+    image: nacos/nacos-server:latest
+    restart: always
+    ports:
+      - "8848:8848"
+    container_name: nacos
+    hostname: nacos-server
+    environment:
+      MODE: standalone
+      SPRINT_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_DB_NAME: nacos
+      MYSQL_SERVICE_USER: nacos
+      MYSQL_SERVICE_PASSWORD: nacos
+      MYSQL_DB_PARAM: "characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai"
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    networks:
+      - middleware
+
+  emqx:
+    image: emqx/emqx:4.3.10
+    hostname: emqx
+    container_name: emqx
+    ports:
+      - "1883:1883"
+      - "18083:8083"
+      - "18084:8084"
+      - "8883:8883"
+      - "28083:18083"
+      - "18081:8081"
+    environment:
+      TZ: Asia/Shanghai
+      EMQX_NAME: emqx
+      EMQX_HOST: node.emqx.com
+      EMQX_LOADED_PLUGINS: emqx_dashboard, emqx_auth_http,emqx_management
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx_ctl", "status"]
+      interval: 5s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - /emqx/data:/opt/emqx/data
+      - /emqx/log:/opt/emqx/log
+    networks:
+      middleware:
+        aliases:
+          - node.emqx.com
+
+networks:
+  middleware:
