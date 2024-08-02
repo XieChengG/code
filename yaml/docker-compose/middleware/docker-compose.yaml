@@ -46,26 +46,28 @@ services:
     networks:
       - middleware
 
-  nacos:
-    image: nacos/nacos-server:latest
-    restart: always
-    ports:
-      - "8848:8848"
-    container_name: nacos
-    hostname: nacos-server
-    environment:
-      MODE: standalone
-      SPRINT_DATASOURCE_PLATFORM: mysql
-      MYSQL_SERVICE_DB_NAME: nacos
-      MYSQL_SERVICE_USER: nacos
-      MYSQL_SERVICE_PASSWORD: nacos
-      MYSQL_DB_PARAM: "characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai"
-    links:
-      - mysql
-    depends_on:
-      - mysql
-    networks:
-      - middleware
+#  nacos:
+#    image: nacos/nacos-server:v2.4.0
+#    restart: always
+#    ports:
+#      - "8848:8848"
+#    container_name: nacos
+#    hostname: nacos-server
+#    environment:
+#      MODE: standalone
+#      SPRINT_DATASOURCE_PLATFORM: mysql
+#      MYSQL_SERVICE_HOST: 61.145.163.124
+#      MYSQL_SERVICE_PORT: 13306
+#      MYSQL_SERVICE_DB_NAME: nacos
+#      MYSQL_SERVICE_USER: nacos
+#      MYSQL_SERVICE_PASSWORD: nacos
+#      MYSQL_DB_PARAM: "characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai"
+#    links:
+#      - mysql
+#    depends_on:
+#      - mysql
+#    networks:
+#      - middleware
 
   emqx:
     image: emqx/emqx:4.3.10
