@@ -7,7 +7,7 @@ export TERM=xterm
 # 获取进程CPU使用率
 function get_cpu() {
   declare -a cpu_value_arr=()
-  for((i=0;i<${#pids[@]};i++))
+  for ((i=0;i<${#pids[@]};i++))
   do
     local pid
     pid=${pids[i]}
@@ -22,7 +22,7 @@ function get_cpu() {
   done
 
   local cpu_value_sum=0
-  for((i=0;i<${#cpu_value_arr[@]};i++))
+  for ((i=0;i<${#cpu_value_arr[@]};i++))
   do
     cpu_value_sum=$(echo "$cpu_value_sum+${cpu_value_arr[i]}" | bc)
   done
@@ -33,7 +33,7 @@ function get_cpu() {
 # 获取进程内存使用率
 function get_mem() {
   declare -a mem_value_arr=()
-  for((i=0;i<${#pids[@]};i++))
+  for ((i=0;i<${#pids[@]};i++))
   do
     local pid
     pid=${pids[i]}
@@ -48,7 +48,7 @@ function get_mem() {
   done
 
   local mem_value_sum=0
-  for((i=0;i<${#mem_value_arr[@]};i++))
+  for ((i=0;i<${#mem_value_arr[@]};i++))
   do
     mem_value_sum=$(echo "$mem_value_sum+${mem_value_arr[i]}" | bc)
   done
@@ -125,7 +125,7 @@ function get_process_num() {
 
   # 求数组的和
   sum=0
-  for((i=0;i<${#Process_Num_Arr[@]};i++))
+  for ((i=0;i<${#Process_Num_Arr[@]};i++))
   do
     sum=$((sum+Process_Num_Arr[i]))
   done
