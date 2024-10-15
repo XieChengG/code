@@ -73,7 +73,7 @@ function Mongo_all_backup() {
   sleep 5
 }
 
-# 检测备份文件的有效性
+# 检测备份文件的有效性，并进行打包压缩
 function Check_backup_file() {
   databases=(`ls`)
   for db in ${databases[@]}
@@ -91,6 +91,8 @@ function Check_backup_file() {
         fi
       done
       cd ..
+      sudo tar -zcf ${db}_${BAK_TIME}.tar.gz ./$db
+      sudo rm -fr $db
     else
       logger warn "备份数据库[$db]为空，请检查是否正常"
       cd ..
