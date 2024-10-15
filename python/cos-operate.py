@@ -3,8 +3,6 @@
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 
-secret_id = 'AKIDylJaaJlwrVt1tWsynLccLo1xc190atxl'
-secret_key = 'xxxxxxxxxxxxxxxxxx'
 token = None
 region = 'ap-shanghai'
 
