@@ -27,7 +27,9 @@ domain_list = [
     "wiki.xmindtech.com",
     "test.test.xmindtech.com",
     "m.xmindtech.com",
-    "www.xmindtech.com"
+    "www.xmindtech.com",
+    "agent.test.xmindtech.com",
+    "voice-copy.test.xmindtech.com"
 ]
 
 
