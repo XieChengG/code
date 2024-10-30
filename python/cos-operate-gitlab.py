@@ -23,7 +23,7 @@ def get_file_name(base_dir):
 
 
 def upload_file(file_name, bucket_name, base_dir):
-    dir_name = 'bt_backup_qingliang/gitlab'
+    dir_name = 'bt_backup/gitlab'
     object_name = dir_name + '/' + file_name
     put_file_name = base_dir + '/' + file_name
 
@@ -42,7 +42,7 @@ def upload_file(file_name, bucket_name, base_dir):
 if __name__ == '__main__':
     try:
         base_dir = "/backup/gitlab"
-        bucket_name = 'edu-xmind-1257184986'
+        bucket_name = 'edu-private-1257184986'
         file_list = get_file_name(base_dir)
         for file_name in file_list:
             upload_file(file_name, bucket_name, base_dir)

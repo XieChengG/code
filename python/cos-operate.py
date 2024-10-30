@@ -24,7 +24,7 @@ def get_file_name(base_dir, backup_time):
 
 
 def upload_file(file_name, bucket_name, base_dir, backup_time):
-    dir_name = 'bt_backup_qingliang/database/mongodb'
+    dir_name = 'bt_backup/database/mongodb'
     object_name = dir_name + '/' + file_name
     put_file_name = os.path.join(base_dir, backup_time) + '/' + file_name
 
@@ -43,7 +43,7 @@ def upload_file(file_name, bucket_name, base_dir, backup_time):
 if __name__ == '__main__':
     try:
         base_dir = "/backup/database/mongodb"
-        bucket_name = 'edu-xmind-1257184986'
+        bucket_name = 'edu-private-1257184986'
         backup_time = time.strftime("%Y%m%d", time.localtime())
         file_list = get_file_name(base_dir, backup_time)
         for file_name in file_list:
