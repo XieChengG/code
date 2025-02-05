@@ -29,7 +29,18 @@ domain_list = [
     "m.xmindtech.com",
     "www.xmindtech.com",
     "agent.test.xmindtech.com",
-    "voice-copy.test.xmindtech.com"
+    "voice-copy.test.xmindtech.com",
+    "www.battleace.cn",
+    "api.battleace.cn",
+    "logto.ai.bigs.top",
+    "chatgpt-next.ai.bigs.top",
+    "wework.ai.bigs.top",
+    "voice-api.ai.bigs.top",
+    "static.xoriginai.com",
+    "apicloud.xoriginai.com",
+    "xoriginai.com",
+    "www.xoriginai.com",
+    "logto-admin.ai.bigs.top"
 ]
 
 
