@@ -1,3 +1,5 @@
+import sys
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -14,6 +16,7 @@ class BuyTicket(object):
         self.depart_date = input("请输入出发日期（如2025-04-17）：")
         self.trains = input("请输入车次（如G1234,G1235）：").split(",")
         self.passengers = input("请输入乘客姓名（如张三,李四）：").split(",")
+        self.id_card_number = input("请输入登录账号的身份证后4位：")
 
         self.driver = webdriver.Chrome()  # 调用谷歌浏览器
         self.login_url = "https://kyfw.12306.cn/otn/resources/login.html"  # 登录页面
@@ -38,7 +41,48 @@ class BuyTicket(object):
             EC.element_to_be_clickable((By.ID, "J-login"))
         )
         self.driver.find_element(By.ID, "J-login").click()
+
+        self._input_id_card_number()
+
+        WebDriverWait(self.driver, 100).until(  # 判断是否登录成功
+            EC.presence_of_element_located((By.CLASS_NAME, "login-user"))
+        )
         print("登录成功！")
+
+        cookies = self.driver.get_cookies()
+        return cookies
+
+    @staticmethod
+    def save_cookies(cookies, filename):
+        """保存Cookies到文件"""
+        import pickle
+        with open(filename, "wb") as f:
+            pickle.dump(cookies, f)
+
+    @staticmethod
+    def load_cookies(filename):
+        """从文件加载Cookies"""
+        import pickle
+        try:
+            with open(filename, "rb") as f:
+                return pickle.load(f)
+        except Exception as e:
+            print(e)
+
+    def _input_id_card_number(self):
+        """输入登录账号的身份证后4位"""
+        try:
+            WebDriverWait(self.driver, 100).until(  # 检测是否有登录账号的身份证后4位输入框
+                EC.visibility_of_element_located((By.ID, "id_card"))
+            )
+            self.driver.find_element(By.ID, "id_card").send_keys(self.id_card_number)  # 输入登录账号的身份证后4位
+
+            WebDriverWait(self.driver, 100).until(  # 检测获取验证码按钮是否可点击
+                EC.element_to_be_clickable((By.ID, "verification_code"))
+            )
+            self.driver.find_element(By.ID, "verification_code").click()
+        except Exception as e:
+            print(e)
 
     def auth_code(self):
         """验证码"""
@@ -146,8 +190,15 @@ class BuyTicket(object):
 
 if __name__ == "__main__":
     try:
-        buy_ticket = BuyTicket()
-        buy_ticket.login("948369040@qq.com", "xcg1991")
+        cookies = []
+        filename = "cookies.txt"
+
+        buy_ticket = BuyTicket()  # 实例化
+
+        buy_ticket.load_cookies(filename)
+        cookies = buy_ticket.login("948369040@qq.com", "xcg1991")
+        buy_ticket.save_cookies(cookies, filename)
+
         buy_ticket.query_ticket()
 
         count = 0
