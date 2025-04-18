@@ -21,8 +21,9 @@ class BuyTicket(object):
         self.left_ticket_url = "https://kyfw.12306.cn/otn/leftTicket/init"  # 余票查询
         self.passenger_url = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"  # 乘客信息
 
-    def login(self):
+    def login(self, username, password):
         """登录"""
+        print("开始登录12306...")
         self.driver.get(self.login_url)
         script = 'Object.defineProperty(navigator,"webdriver",{get:() => false,});'  # 绕过反爬虫
         self.driver.execute_script(script)
@@ -31,12 +32,13 @@ class BuyTicket(object):
             EC.url_to_be(self.login_url)
         )
 
-        self.driver.find_element(By.ID, "J-userName").send_keys("")  # 12306登录用户名
-        self.driver.find_element(By.ID, "J-password").send_keys("")  # 12306登录密码
+        self.driver.find_element(By.ID, "J-userName").send_keys(username)  # 12306登录用户名
+        self.driver.find_element(By.ID, "J-password").send_keys(password)  # 12306登录密码
         WebDriverWait(self.driver, 100).until(  # 检测登录按钮是否可点击
             EC.element_to_be_clickable((By.ID, "J-login"))
         )
         self.driver.find_element(By.ID, "J-login").click()
+        print("登录成功！")
 
     def auth_code(self):
         """验证码"""
@@ -44,36 +46,40 @@ class BuyTicket(object):
 
     def query_ticket(self):
         """余票查询"""
-        WebDriverWait(self.driver, 100).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".btn"))
-        )
-        self.driver.find_element(By.CSS_SELECTOR, ".btn").click()  # 提示确认
-
+        print("开始查询余票...")
+        # WebDriverWait(self.driver, 100).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, ".btn"))
+        # )
+        # self.driver.find_element(By.CSS_SELECTOR, ".btn").click()  # 提示确认
         self.driver.get(self.left_ticket_url)  # 进入余票查询页面
 
-        WebDriverWait(self.driver, 100).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#qd_closeDefaultWarningWindowDialog_id"))
-
-        )
-        self.driver.find_element(By.CSS_SELECTOR, "#qd_closeDefaultWarningWindowDialog_id").click()
-
+        # WebDriverWait(self.driver, 100).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, "#qd_closeDefaultWarningWindowDialog_id"))
+        #
+        # )
+        # self.driver.find_element(By.CSS_SELECTOR, "#qd_closeDefaultWarningWindowDialog_id").click()
+        print("输入出发地...")
         self.driver.find_element(By.ID, "fromStationText").click()  # 输入出发地
         self.driver.find_element(By.ID, "fromStationText").send_keys(self.from_station)
         self.driver.find_element(By.ID, "fromStationText").send_keys(Keys.ENTER)
 
+        print("输入目的地...")
         self.driver.find_element(By.ID, "toStationText").click()  # 输入目的地
         self.driver.find_element(By.ID, "toStationText").send_keys(self.to_station)
         self.driver.find_element(By.ID, "toStationText").send_keys(Keys.ENTER)
 
+        print("输入出发日期...")
         self.driver.find_element(By.ID, "train_date").clear()  # 输入出发日期
         self.driver.find_element(By.ID, "train_date").send_keys(self.depart_date)
 
+    def buy_ticket(self):
+        """购买车票"""
+        time.sleep(30)
+        print("开始购买车票...")
+        self.driver.get(self.left_ticket_url)  # 进入余票查询页面
         WebDriverWait(self.driver, 100).until(  # 检测查询按钮是否可点击
             EC.element_to_be_clickable((By.ID, "query_ticket"))
         )
-
-    def buy_ticket(self):
-        """购买车票"""
         self.driver.find_element(By.ID, "query_ticket").click()  # 点击查询
 
         WebDriverWait(self.driver, 100).until(  # 检测车次列表是否加载完成
@@ -111,9 +117,13 @@ class BuyTicket(object):
                             break
                     except Exception as e:
                         pass
+                    return True, train_number
+                else:
+                    return False, train_number
 
     def select_passenger(self):
         """选择乘客"""
+        print("开始选择乘客...")
         passenger_list = self.driver.find_element(By.XPATH, ".//ul[@id='normal_passenger_id']/li/label")  # 获取乘客列表
         for passenger in passenger_list:
             if passenger.text in self.passengers:  # 如果乘客在输入的乘客列表中
@@ -132,3 +142,26 @@ class BuyTicket(object):
         WebDriverWait(self.driver, 100).until(
             EC.element_to_be_clickable((By.ID, "qr_submit_id"))
         )
+
+
+if __name__ == "__main__":
+    try:
+        buy_ticket = BuyTicket()
+        buy_ticket.login("948369040@qq.com", "xcg1991")
+        buy_ticket.query_ticket()
+
+        count = 0
+        while True:
+            try:
+                result, train_number = buy_ticket.buy_ticket()
+                if result:
+                    break
+                else:
+                    count += 1
+                    print(f"您所抢的{train_number}暂时无票，正在尝试重试第{count}次")
+                    time.sleep(10)
+            except Exception as e:
+                print(e)
+
+    except Exception as e:
+        print(e)
