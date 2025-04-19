@@ -6,7 +6,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options
 import time
+
+options = Options()
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_experimental_option("excludeSwitches", ["enable-automation"])
+options.add_experimental_option("useAutomationExtension", False)
 
 
 class BuyTicket(object):
@@ -18,18 +24,25 @@ class BuyTicket(object):
         self.passengers = input("请输入乘客姓名（如张三,李四）：").split(",")
         self.id_card_number = input("请输入登录账号的身份证后4位：")
 
-        self.driver = webdriver.Chrome()  # 调用谷歌浏览器
         self.login_url = "https://kyfw.12306.cn/otn/resources/login.html"  # 登录页面
         self.personal_url = "https://kyfw.12306.cn/otn/view/index.html"  # 个人中心
         self.left_ticket_url = "https://kyfw.12306.cn/otn/leftTicket/init"  # 余票查询
         self.passenger_url = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"  # 乘客信息
 
+        # 绕过 12306 反爬虫
+        self.driver = webdriver.Chrome(options=options)  # 调用谷歌浏览器
+        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                  get: () => undefined
+                })
+              """
+        })
+
     def login(self, username, password):
         """登录"""
         print("开始登录12306...")
         self.driver.get(self.login_url)
-        script = 'Object.defineProperty(navigator,"webdriver",{get:() => false,});'  # 绕过反爬虫
-        self.driver.execute_script(script)
 
         WebDriverWait(self.driver, 100).until(
             EC.url_to_be(self.login_url)
@@ -44,13 +57,15 @@ class BuyTicket(object):
 
         self._input_id_card_number()
 
-        WebDriverWait(self.driver, 100).until(  # 判断是否登录成功
-            EC.presence_of_element_located((By.CLASS_NAME, "login-user"))
-        )
+        # WebDriverWait(self.driver, 100).until(  # 判断是否登录成功
+        #     EC.presence_of_element_located((By.CLASS_NAME, "login-user"))
+        # )
+
+        time.sleep(20)
         print("登录成功！")
 
-        cookies = self.driver.get_cookies()
-        return cookies
+        # cookies = self.driver.get_cookies()
+        # return cookies
 
     @staticmethod
     def save_cookies(cookies, filename):
@@ -118,26 +133,25 @@ class BuyTicket(object):
 
     def buy_ticket(self):
         """购买车票"""
-        time.sleep(30)
         print("开始购买车票...")
-        self.driver.get(self.left_ticket_url)  # 进入余票查询页面
-        WebDriverWait(self.driver, 100).until(  # 检测查询按钮是否可点击
-            EC.element_to_be_clickable((By.ID, "query_ticket"))
-        )
+        # self.driver.get(self.left_ticket_url)  # 进入余票查询页面
+        # WebDriverWait(self.driver, 100).until(  # 检测查询按钮是否可点击
+        #     EC.element_to_be_clickable((By.ID, "query_ticket"))
+        # )
         self.driver.find_element(By.ID, "query_ticket").click()  # 点击查询
 
         WebDriverWait(self.driver, 100).until(  # 检测车次列表是否加载完成
             EC.presence_of_element_located((By.XPATH, ".//tbody[@id='queryLeftTable']/tr"))
         )
 
-        tr_list = self.driver.find_element(By.XPATH, ".//tbody[@id='queryLeftTable']/tr[not(@datatran)]")  # 过滤掉灰色车次
+        tr_list = self.driver.find_elements(By.XPATH, ".//tbody[@id='queryLeftTable']/tr[not(@datatran)]")  # 过滤掉灰色车次
         for tr in tr_list:
             train_number = tr.find_element(By.CLASS_NAME, "number").text  # 车次
             if train_number in self.trains:  # 如果车次在输入的车次列表中
                 left_ticker_td = tr.find_element(By.XPATH, ".//td[4]").text
                 if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
                     print(train_number + "有票")
-                    self.driver.find_element((By.CLASS_NAME, "btn72")).click()  # 点击该车次的预定按钮
+                    self.driver.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
 
                     WebDriverWait(self.driver, 100).until(  # 等待确认页面加载完成
                         EC.url_to_be(self.passenger_url)
@@ -168,7 +182,7 @@ class BuyTicket(object):
     def select_passenger(self):
         """选择乘客"""
         print("开始选择乘客...")
-        passenger_list = self.driver.find_element(By.XPATH, ".//ul[@id='normal_passenger_id']/li/label")  # 获取乘客列表
+        passenger_list = self.driver.find_elements(By.XPATH, ".//ul[@id='normal_passenger_id']/li/label")  # 获取乘客列表
         for passenger in passenger_list:
             if passenger.text in self.passengers:  # 如果乘客在输入的乘客列表中
                 passenger.click()  # 选择该乘客
@@ -190,14 +204,14 @@ class BuyTicket(object):
 
 if __name__ == "__main__":
     try:
-        cookies = []
-        filename = "cookies.txt"
+        # cookies = []
+        # filename = "cookies.txt"
 
         buy_ticket = BuyTicket()  # 实例化
 
-        buy_ticket.load_cookies(filename)
-        cookies = buy_ticket.login("948369040@qq.com", "xcg1991")
-        buy_ticket.save_cookies(cookies, filename)
+        # buy_ticket.load_cookies(filename)
+        buy_ticket.login("948369040@qq.com", "xcg1991")
+        # buy_ticket.save_cookies(cookies, filename)
 
         buy_ticket.query_ticket()
 
