@@ -150,8 +150,8 @@ class BuyTicket(object):
             if train_number in self.trains:  # 如果车次在输入的车次列表中
                 left_ticker_td = tr.find_element(By.XPATH, ".//td[4]").text
                 if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
-                    print(train_number + "有票")
-                    self.driver.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
+                    print(train_number + left_ticker_td + "票")
+                    tr.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
 
                     WebDriverWait(self.driver, 100).until(  # 等待确认页面加载完成
                         EC.url_to_be(self.passenger_url)
@@ -175,6 +175,7 @@ class BuyTicket(object):
                             break
                     except Exception as e:
                         pass
+                    time.sleep(5)
                     return True, train_number
                 else:
                     return False, train_number
