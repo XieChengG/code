@@ -149,6 +149,7 @@ class BuyTicket(object):
             train_number = tr.find_element(By.CLASS_NAME, "number").text  # 车次
             if train_number in self.trains:  # 如果车次在输入的车次列表中
                 left_ticker_td = tr.find_element(By.XPATH, ".//td[4]").text
+                print(left_ticker_td)
                 if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
                     print(train_number + left_ticker_td + "票")
                     tr.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
