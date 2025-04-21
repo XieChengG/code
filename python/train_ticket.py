@@ -1,4 +1,7 @@
 import sys
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -28,6 +31,17 @@ class BuyTicket(object):
         self.personal_url = "https://kyfw.12306.cn/otn/view/index.html"  # 个人中心
         self.left_ticket_url = "https://kyfw.12306.cn/otn/leftTicket/init"  # 余票查询
         self.passenger_url = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"  # 乘客信息
+
+        # 邮件配置
+        self.from_email_addr = "xiechenggang1991@163.com"
+        self.to_email_addr = "xiechenggang@yeah.net"  # 多个用逗号隔开
+        self.smtp_server = "smtp.163.com"
+        self.password = "xcg199109"
+        self.subject = "12306购票成功"
+        self.msg = MIMEText("恭喜，您在12306抢票成功，请及时支付！", "plain", "utf-8")
+        self.msg["From"] = Header(self.from_email_addr, "utf-8")
+        self.msg["To"] = Header(self.to_email_addr, "utf-8")
+        self.msg["Subject"] = Header(self.subject, "utf-8")
 
         # 绕过 12306 反爬虫
         self.driver = webdriver.Chrome(options=options)  # 调用谷歌浏览器
@@ -173,9 +187,11 @@ class BuyTicket(object):
                             confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
                             self.driver.execute_script("arguments[0].click();", confirm_btn)
                             print("恭喜，抢票成功！")
-                            break
+                            res = self.email_notice()
+                            if res:
+                                break
                     except Exception as e:
-                        pass
+                        print(e)
                     return True, train_number
                 else:
                     return False, train_number
@@ -202,6 +218,19 @@ class BuyTicket(object):
             EC.element_to_be_clickable((By.ID, "qr_submit_id"))
         )
 
+    def email_notice(self):
+        """发送邮件通知"""
+        try:
+            smtp_obj = smtplib.SMTP_SSL(self.smtp_server)
+            smtp_obj.connect(self.smtp_server, 465)
+            smtp_obj.login(self.from_email_addr, self.password)
+            smtp_obj.sendmail(self.from_email_addr, self.to_email_addr.split(","), self.msg.as_string())
+            print("邮件发送成功！")
+            smtp_obj.quit()
+            return True
+        except smtplib.SMTPException:
+            print("邮件发送失败！")
+
 
 if __name__ == "__main__":
     try:
@@ -225,7 +254,7 @@ if __name__ == "__main__":
                 else:
                     count += 1
                     print(f"您所抢的{train_number}暂时无票，正在尝试重试第{count}次")
-                    time.sleep(10)
+                    time.sleep(3)
             except Exception as e:
                 print(e)
 
