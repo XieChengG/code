@@ -148,10 +148,9 @@ class BuyTicket(object):
         for tr in tr_list:
             train_number = tr.find_element(By.CLASS_NAME, "number").text  # 车次
             if train_number in self.trains:  # 如果车次在输入的车次列表中
-                left_ticker_td = tr.find_element(By.XPATH, ".//td[4]").text
-                print(left_ticker_td)
+                left_ticker_td = tr.find_element(By.XPATH, ".//td[5]").text
                 if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
-                    print(train_number + left_ticker_td + "票")
+                    print(train_number + " " + left_ticker_td + "票")
                     tr.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
 
                     WebDriverWait(self.driver, 100).until(  # 等待确认页面加载完成
@@ -165,18 +164,18 @@ class BuyTicket(object):
                     self.driver.find_element(By.ID, "submitOrder_id").click()  # 点击提交订单
                     self.wait_for_confirm()
                     confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
-                    confirm_btn.click()
+                    self.driver.execute_script("arguments[0].click();", confirm_btn)  # 点击确认订单
+                    time.sleep(10)
 
                     # 如果一次点击不成功，则持续点击
                     try:
                         while confirm_btn:
-                            confirm_btn.click()
                             confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
+                            self.driver.execute_script("arguments[0].click();", confirm_btn)
                             print("恭喜，抢票成功！")
                             break
                     except Exception as e:
                         pass
-                    time.sleep(5)
                     return True, train_number
                 else:
                     return False, train_number
@@ -195,11 +194,11 @@ class BuyTicket(object):
             EC.presence_of_element_located((By.CLASS_NAME, "dhtmlx_wins_body_outer"))
         )
 
-        WebDriverWait(self.driver, 100).until(
+        WebDriverWait(self.driver, 100).until(  # 检测确认窗口是否加载完成
             EC.presence_of_element_located((By.ID, "qr_submit_id"))
         )
 
-        WebDriverWait(self.driver, 100).until(
+        WebDriverWait(self.driver, 100).until(  # 检测确认按钮是否可点击
             EC.element_to_be_clickable((By.ID, "qr_submit_id"))
         )
 
