@@ -1,4 +1,5 @@
 import sys
+import os
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
@@ -147,54 +148,65 @@ class BuyTicket(object):
 
     def buy_ticket(self):
         """购买车票"""
-        print("开始购买车票...")
-        # self.driver.get(self.left_ticket_url)  # 进入余票查询页面
-        # WebDriverWait(self.driver, 100).until(  # 检测查询按钮是否可点击
-        #     EC.element_to_be_clickable((By.ID, "query_ticket"))
-        # )
-        self.driver.find_element(By.ID, "query_ticket").click()  # 点击查询
+        count = 0
+        while True:
+            print("开始购买车票...")
+            # self.driver.get(self.left_ticket_url)  # 进入余票查询页面
+            # WebDriverWait(self.driver, 100).until(  # 检测查询按钮是否可点击
+            #     EC.element_to_be_clickable((By.ID, "query_ticket"))
+            # )
+            self.driver.find_element(By.ID, "query_ticket").click()  # 点击查询
 
-        WebDriverWait(self.driver, 100).until(  # 检测车次列表是否加载完成
-            EC.presence_of_element_located((By.XPATH, ".//tbody[@id='queryLeftTable']/tr"))
-        )
+            WebDriverWait(self.driver, 100).until(  # 检测车次列表是否加载完成
+                EC.presence_of_element_located((By.XPATH, ".//tbody[@id='queryLeftTable']/tr"))
+            )
 
-        tr_list = self.driver.find_elements(By.XPATH, ".//tbody[@id='queryLeftTable']/tr[not(@datatran)]")  # 过滤掉灰色车次
-        for tr in tr_list:
-            train_number = tr.find_element(By.CLASS_NAME, "number").text  # 车次
-            if train_number in self.trains:  # 如果车次在输入的车次列表中
-                left_ticker_td = tr.find_element(By.XPATH, ".//td[5]").text
-                if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
-                    print(train_number + " " + left_ticker_td + "票")
-                    tr.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
+            tr_list = self.driver.find_elements(By.XPATH,
+                                                ".//tbody[@id='queryLeftTable']/tr[not(@datatran)]")  # 过滤掉灰色车次
+            for tr in tr_list:
+                try:
+                    train_number = tr.find_element(By.CLASS_NAME, "number").text  # 车次
+                    for train in self.trains:
+                        if train == train_number:  # 如果车次在输入的车次列表中
+                            left_ticker_td = tr.find_element(By.XPATH, ".//td[5]").text
+                            if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
+                                print(train_number + " " + left_ticker_td + "票")
+                                tr.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
 
-                    WebDriverWait(self.driver, 100).until(  # 等待确认页面加载完成
-                        EC.url_to_be(self.passenger_url)
-                    )
+                                WebDriverWait(self.driver, 100).until(  # 等待确认页面加载完成
+                                    EC.url_to_be(self.passenger_url)
+                                )
 
-                    WebDriverWait(self.driver, 100).until(  # 等待乘客列表加载完成
-                        EC.presence_of_element_located((By.XPATH, ".//ul[@id='normal_passenger_id']/li"))
-                    )
-                    self.select_passenger()
-                    self.driver.find_element(By.ID, "submitOrder_id").click()  # 点击提交订单
-                    self.wait_for_confirm()
-                    confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
-                    self.driver.execute_script("arguments[0].click();", confirm_btn)  # 点击确认订单
-                    time.sleep(10)
+                                WebDriverWait(self.driver, 100).until(  # 等待乘客列表加载完成
+                                    EC.presence_of_element_located((By.XPATH, ".//ul[@id='normal_passenger_id']/li"))
+                                )
+                                self.select_passenger()
+                                self.driver.find_element(By.ID, "submitOrder_id").click()  # 点击提交订单
+                                self.wait_for_confirm()
+                                confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
+                                self.driver.execute_script("arguments[0].click();", confirm_btn)  # 点击确认订单
+                                time.sleep(10)
 
-                    # 如果一次点击不成功，则持续点击
-                    try:
-                        while confirm_btn:
-                            confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
-                            self.driver.execute_script("arguments[0].click();", confirm_btn)
-                            print("恭喜，抢票成功！")
-                            res = self.email_notice()
-                            if res:
-                                break
-                    except Exception as e:
-                        print(e)
-                    return True, train_number
-                else:
-                    return False, train_number
+                                # 如果一次点击不成功，则持续点击
+                                try:
+                                    while confirm_btn:
+                                        confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
+                                        self.driver.execute_script("arguments[0].click();", confirm_btn)
+                                        print("恭喜，抢票成功！")
+                                        res = self.email_notice()
+                                        if res:
+                                            os._exit(0)
+                                        else:
+                                            os._exit(1)
+                                except Exception as e:
+                                    print(e)
+                                    os._exit(1)
+                            else:
+                                count += 1
+                                print(f"您所抢的{train_number}暂时无票，正在尝试重试第{count}次")
+                                time.sleep(3)
+                except:
+                    break
 
     def select_passenger(self):
         """选择乘客"""
@@ -244,19 +256,7 @@ if __name__ == "__main__":
         # buy_ticket.save_cookies(cookies, filename)
 
         buy_ticket.query_ticket()
-
-        count = 0
-        while True:
-            try:
-                result, train_number = buy_ticket.buy_ticket()
-                if result:
-                    break
-                else:
-                    count += 1
-                    print(f"您所抢的{train_number}暂时无票，正在尝试重试第{count}次")
-                    time.sleep(3)
-            except Exception as e:
-                print(e)
+        buy_ticket.buy_ticket()
 
     except Exception as e:
         print(e)
