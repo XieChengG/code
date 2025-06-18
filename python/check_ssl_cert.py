@@ -37,10 +37,10 @@ domain_list = [
     "wework.ai.bigs.top",
     "voice-api.ai.bigs.top",
     "static.xoriginai.com",
-    "apicloud.xoriginai.com",
     "xoriginai.com",
     "www.xoriginai.com",
     "logto-admin.ai.bigs.top"
+    "webrtc.xoriginai.com"
 ]
 
 
