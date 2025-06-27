@@ -40,7 +40,9 @@ domain_list = [
     "xoriginai.com",
     "www.xoriginai.com",
     "logto-admin.ai.bigs.top",
-    "webrtc.xoriginai.com"
+    "webrtc.xoriginai.com",
+    "xdc.aipi.com",
+    "xdc-ota.xorigin.ai"
 ]
 
 
