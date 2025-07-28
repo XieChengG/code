@@ -43,7 +43,8 @@ domain_list = [
     "webrtc.xoriginai.com",
     "xdc.aipi.com",
     "xdc-ota.xorigin.ai",
-    "xdc.xorigin.ai"
+    "xdc.xorigin.ai",
+    "xdc.xoriginai.com"
 ]
 
 
