@@ -45,7 +45,8 @@ domain_list = [
     "xdc-ota.xorigin.ai",
     "xdc.xorigin.ai",
     "xdc.xoriginai.com",
-    "xdc-ota.xoriginai.com"
+    "xdc-ota.xoriginai.com",
+    "static.aipi.com"
 ]
 
 
