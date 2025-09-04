@@ -31,7 +31,9 @@ class BuyTicket(object):
         self.login_url = "https://kyfw.12306.cn/otn/resources/login.html"  # 登录页面
         self.personal_url = "https://kyfw.12306.cn/otn/view/index.html"  # 个人中心
         self.left_ticket_url = "https://kyfw.12306.cn/otn/leftTicket/init"  # 余票查询
-        self.passenger_url = "https://kyfw.12306.cn/otn/confirmPassenger/initDc"  # 乘客信息
+        self.passenger_url = (
+            "https://kyfw.12306.cn/otn/confirmPassenger/initDc"  # 乘客信息
+        )
 
         # 邮件配置
         self.from_email_addr = "xiechenggang1991@163.com"
@@ -46,25 +48,30 @@ class BuyTicket(object):
 
         # 绕过 12306 反爬虫
         self.driver = webdriver.Chrome(options=options)  # 调用谷歌浏览器
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": """
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": """
                 Object.defineProperty(navigator, 'webdriver', {
                   get: () => undefined
                 })
               """
-        })
+            },
+        )
 
     def login(self, username, password):
         """登录"""
         print("开始登录12306...")
         self.driver.get(self.login_url)
 
-        WebDriverWait(self.driver, 100).until(
-            EC.url_to_be(self.login_url)
-        )
+        WebDriverWait(self.driver, 100).until(EC.url_to_be(self.login_url))
 
-        self.driver.find_element(By.ID, "J-userName").send_keys(username)  # 12306登录用户名
-        self.driver.find_element(By.ID, "J-password").send_keys(password)  # 12306登录密码
+        self.driver.find_element(By.ID, "J-userName").send_keys(
+            username
+        )  # 12306登录用户名
+        self.driver.find_element(By.ID, "J-password").send_keys(
+            password
+        )  # 12306登录密码
         WebDriverWait(self.driver, 100).until(  # 检测登录按钮是否可点击
             EC.element_to_be_clickable((By.ID, "J-login"))
         )
@@ -86,6 +93,7 @@ class BuyTicket(object):
     def save_cookies(cookies, filename):
         """保存Cookies到文件"""
         import pickle
+
         with open(filename, "wb") as f:
             pickle.dump(cookies, f)
 
@@ -93,6 +101,7 @@ class BuyTicket(object):
     def load_cookies(filename):
         """从文件加载Cookies"""
         import pickle
+
         try:
             with open(filename, "rb") as f:
                 return pickle.load(f)
@@ -102,10 +111,14 @@ class BuyTicket(object):
     def _input_id_card_number(self):
         """输入登录账号的身份证后4位"""
         try:
-            WebDriverWait(self.driver, 100).until(  # 检测是否有登录账号的身份证后4位输入框
+            WebDriverWait(
+                self.driver, 100
+            ).until(  # 检测是否有登录账号的身份证后4位输入框
                 EC.visibility_of_element_located((By.ID, "id_card"))
             )
-            self.driver.find_element(By.ID, "id_card").send_keys(self.id_card_number)  # 输入登录账号的身份证后4位
+            self.driver.find_element(By.ID, "id_card").send_keys(
+                self.id_card_number
+            )  # 输入登录账号的身份证后4位
 
             WebDriverWait(self.driver, 100).until(  # 检测获取验证码按钮是否可点击
                 EC.element_to_be_clickable((By.ID, "verification_code"))
@@ -158,40 +171,66 @@ class BuyTicket(object):
             self.driver.find_element(By.ID, "query_ticket").click()  # 点击查询
 
             WebDriverWait(self.driver, 100).until(  # 检测车次列表是否加载完成
-                EC.presence_of_element_located((By.XPATH, ".//tbody[@id='queryLeftTable']/tr"))
+                EC.presence_of_element_located(
+                    (By.XPATH, ".//tbody[@id='queryLeftTable']/tr")
+                )
             )
 
-            tr_list = self.driver.find_elements(By.XPATH,
-                                                ".//tbody[@id='queryLeftTable']/tr[not(@datatran)]")  # 过滤掉灰色车次
+            tr_list = self.driver.find_elements(
+                By.XPATH, ".//tbody[@id='queryLeftTable']/tr[not(@datatran)]"
+            )  # 过滤掉灰色车次
             for tr in tr_list:
                 try:
                     train_number = tr.find_element(By.CLASS_NAME, "number").text  # 车次
                     for train in self.trains:
                         if train == train_number:  # 如果车次在输入的车次列表中
                             left_ticker_td = tr.find_element(By.XPATH, ".//td[5]").text
-                            if left_ticker_td == "有" or left_ticker_td.isdigit():  # 如果该车次有票
+                            if (
+                                left_ticker_td == "有" or left_ticker_td.isdigit()
+                            ):  # 如果该车次有票
                                 print(train_number + " " + left_ticker_td + "票")
-                                tr.find_element(By.CLASS_NAME, "btn72").click()  # 点击该车次的预定按钮
+                                tr.find_element(
+                                    By.CLASS_NAME, "btn72"
+                                ).click()  # 点击该车次的预定按钮
 
-                                WebDriverWait(self.driver, 100).until(  # 等待确认页面加载完成
+                                WebDriverWait(
+                                    self.driver, 100
+                                ).until(  # 等待确认页面加载完成
                                     EC.url_to_be(self.passenger_url)
                                 )
 
-                                WebDriverWait(self.driver, 100).until(  # 等待乘客列表加载完成
-                                    EC.presence_of_element_located((By.XPATH, ".//ul[@id='normal_passenger_id']/li"))
+                                WebDriverWait(
+                                    self.driver, 100
+                                ).until(  # 等待乘客列表加载完成
+                                    EC.presence_of_element_located(
+                                        (
+                                            By.XPATH,
+                                            ".//ul[@id='normal_passenger_id']/li",
+                                        )
+                                    )
                                 )
                                 self.select_passenger()
-                                self.driver.find_element(By.ID, "submitOrder_id").click()  # 点击提交订单
+                                self.driver.find_element(
+                                    By.ID, "submitOrder_id"
+                                ).click()  # 点击提交订单
                                 self.wait_for_confirm()
-                                confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
-                                self.driver.execute_script("arguments[0].click();", confirm_btn)  # 点击确认订单
+                                confirm_btn = self.driver.find_element(
+                                    By.ID, "qr_submit_id"
+                                )
+                                self.driver.execute_script(
+                                    "arguments[0].click();", confirm_btn
+                                )  # 点击确认订单
                                 time.sleep(10)
 
                                 # 如果一次点击不成功，则持续点击
                                 try:
                                     while confirm_btn:
-                                        confirm_btn = self.driver.find_element(By.ID, "qr_submit_id")
-                                        self.driver.execute_script("arguments[0].click();", confirm_btn)
+                                        confirm_btn = self.driver.find_element(
+                                            By.ID, "qr_submit_id"
+                                        )
+                                        self.driver.execute_script(
+                                            "arguments[0].click();", confirm_btn
+                                        )
                                         print("恭喜，抢票成功！")
                                         res = self.email_notice()
                                         if res:
@@ -203,15 +242,19 @@ class BuyTicket(object):
                                     os._exit(1)
                             else:
                                 count += 1
-                                print(f"您所抢的{train_number}暂时无票，正在尝试重试第{count}次")
-                                time.sleep(3)
+                                print(
+                                    f"您所抢的{train_number}暂时无票，正在尝试重试第{count}次"
+                                )
+                                time.sleep(0.001)
                 except:
                     break
 
     def select_passenger(self):
         """选择乘客"""
         print("开始选择乘客...")
-        passenger_list = self.driver.find_elements(By.XPATH, ".//ul[@id='normal_passenger_id']/li/label")  # 获取乘客列表
+        passenger_list = self.driver.find_elements(
+            By.XPATH, ".//ul[@id='normal_passenger_id']/li/label"
+        )  # 获取乘客列表
         for passenger in passenger_list:
             if passenger.text in self.passengers:  # 如果乘客在输入的乘客列表中
                 passenger.click()  # 选择该乘客
@@ -236,7 +279,11 @@ class BuyTicket(object):
             smtp_obj = smtplib.SMTP_SSL(self.smtp_server)
             smtp_obj.connect(self.smtp_server, 465)
             smtp_obj.login(self.from_email_addr, self.password)
-            smtp_obj.sendmail(self.from_email_addr, self.to_email_addr.split(","), self.msg.as_string())
+            smtp_obj.sendmail(
+                self.from_email_addr,
+                self.to_email_addr.split(","),
+                self.msg.as_string(),
+            )
             print("邮件发送成功！")
             smtp_obj.quit()
             return True
