@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+import argparse
 import json
 import os
 import sys
@@ -12,7 +15,12 @@ def transfer_dict(file_name):
     dict_list = []
     with open(file_name, "r") as f:
         for line in f:
-            dict_list.append(json.loads(line))
+            try:
+                data = json.loads(line)
+                if type(data) is dict:
+                    dict_list.append(data)
+            except json.JSONDecodeError:
+                continue
     return dict_list
 
 
@@ -59,8 +67,18 @@ def print_analysis_result(*args, **kwargs):
 
 if __name__ == "__main__":
     try:
-        file = "/".join([base_dir, "nginx.log"])
-        data = transfer_dict(file)
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "-f", "--filename", type=str, default="", help="需要分析的文件路径名"
+        )
+
+        if len(sys.argv) == 1:
+            parser.print_help()
+            exit(0)
+
+        args = parser.parse_args()
+
+        data = transfer_dict(args.filename)
 
         (
             upstream_status_not_200,
