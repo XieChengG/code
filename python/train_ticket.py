@@ -220,7 +220,7 @@ class BuyTicket(object):
                                 self.driver.execute_script(
                                     "arguments[0].click();", confirm_btn
                                 )  # 点击确认订单
-                                time.sleep(10)
+                                time.sleep(3)
 
                                 # 如果一次点击不成功，则持续点击
                                 try:
