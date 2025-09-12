@@ -1,3 +1,4 @@
+import pickle
 import sys
 import os
 import smtplib
@@ -86,27 +87,38 @@ class BuyTicket(object):
         time.sleep(20)
         print("登录成功！")
 
-        # cookies = self.driver.get_cookies()
+        cookies = self.driver.get_cookies()
+        print(f"cookies: {cookies}")
+        filename = "cookies.txt"
+        self.save_cookies(cookies, filename)
+        print(f"Cookies 已保存到 {filename}")
+
+        print(f"开始从 {filename} 加载Cookies...")
+        self.load_cookies(filename)
+        print(f"从 {filename} 加载Cookies完成...")
         # return cookies
 
-    @staticmethod
-    def save_cookies(cookies, filename):
+    def save_cookies(self, cookies, filename):
         """保存Cookies到文件"""
-        import pickle
-
         with open(filename, "wb") as f:
             pickle.dump(cookies, f)
 
-    @staticmethod
-    def load_cookies(filename):
+    def load_cookies(self, filename):
         """从文件加载Cookies"""
-        import pickle
-
         try:
             with open(filename, "rb") as f:
-                return pickle.load(f)
+                cookies = pickle.load(f)
+
+            self.driver.delete_all_cookies()
+            for cookie in cookies:
+                if "expiry" in cookie:
+                    cookie["expiry"] = int(cookie["expiry"])
+                self.driver.add_cookie(cookie)
+            print(f"已从 {filename} 加载cookies")
+        except FileNotFoundError:
+            print(f"文件 {filename} 不存在")
         except Exception as e:
-            print(e)
+            print(f"加载Cookies时出错: {e}")
 
     def _input_id_card_number(self):
         """输入登录账号的身份证后4位"""
