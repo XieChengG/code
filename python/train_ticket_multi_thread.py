@@ -327,7 +327,7 @@ if __name__ == "__main__":
         buy_ticket = BuyTicket()  # 实例化
 
         # buy_ticket.load_cookies(filename)
-        buy_ticket.login("948369040@qq.com", "xcg1991")
+        buy_ticket.login("xxxx", "xxxx")
         # buy_ticket.save_cookies(cookies, filename)
 
         buy_ticket.query_ticket()
