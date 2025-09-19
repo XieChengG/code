@@ -46,7 +46,7 @@ domain_list = [
     "xdc.xorigin.ai",
     "xdc.xoriginai.com",
     "xdc-ota.xoriginai.com",
-    "static.aipi.com"
+    "static.aipi.com",
 ]
 
 
@@ -76,7 +76,7 @@ renew_domain_dict = {}
 def get_renew_domain():
     for domain in domain_list:
         cert_info = get_domain_cert(domain)
-        time_delta = get_time_delta(cert_info['notBefore'], cert_info['notAfter'])
+        time_delta = get_time_delta(cert_info["notBefore"], cert_info["notAfter"])
         if time_delta < 20:
             renew_domain_dict[domain] = time_delta
 
@@ -86,7 +86,7 @@ def send_renew_message(message):
     os.popen(f"/usr/bin/env python3 feishu_alert.py '%s'" % message)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         get_renew_domain()
         message = "证书未续期成功的域名：{0}".format(json.dumps(renew_domain_dict))
